@@ -1,0 +1,7 @@
+﻿# disable some entity specific checks
+[{Entities/*.cs,**/*Model.cs}]
+resharper_auto_property_can_be_made_get_only_global_highlighting = none
+resharper_class_never_instantiated_global_highlighting = none
+resharper_unused_auto_property_accessor_global_highlighting = none
+resharper_unused_type_global_highlighting = none
+resharper_virtual_member_call_in_constructor_highlighting = none

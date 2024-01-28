@@ -1,10 +1,12 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NHibernate;
+using NHibernate.Linq;
 using Turnit.GenericStore.Api.Entities;
 
-namespace Turnit.GenericStore.Api.Features.Sales;
+namespace Turnit.GenericStore.Api.Features.Sales.Categories;
 
 [Route("categories")]
 public class CategoriesController : ApiControllerBase
@@ -13,13 +15,16 @@ public class CategoriesController : ApiControllerBase
 
     public CategoriesController(ISession session)
     {
-        _session = session;
+        _session = session ?? throw new ArgumentNullException(nameof(session));
     }
-    
-    [HttpGet, Route("")]
+
+    [HttpGet]
+    [Route("")]
     public async Task<CategoryModel[]> AllCategories()
     {
-        var categories = await _session.QueryOver<Category>().ListAsync();
+        var categories = await _session.Query<Category>()
+            .OrderBy(x => x.Name)
+            .ToListAsync();
 
         var result = categories
             .Select(x => new CategoryModel
@@ -28,7 +33,7 @@ public class CategoriesController : ApiControllerBase
                 Name = x.Name
             })
             .ToArray();
-        
+
         return result;
     }
 }
