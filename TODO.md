@@ -21,11 +21,18 @@ Implement methods:
 * `PUT /products/{productId}/category/{categoryId}`
 * `DELETE /products/{productId}/category/{categoryId}`
 
-### Task 2
+### Task 2 (done)
 
 Add functionality to change products availability in different stores.
 
-Implement methods `POST /products/{productId}/book` and `POST /store/{storeId}/restock`
+Implement methods:
+
+* `POST /stores/{storeId}/products/{productId}/purchase`
+* `POST /stores/{storeId}/products/{productId}/restock`
+
+**NB!** I took the liberty to change the the above methods to accept both
+`storeId` and `productId` for both. Previous task version didn't make any
+sense.
 
 ### Task 3 (done)
 

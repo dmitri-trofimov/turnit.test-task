@@ -16,7 +16,7 @@ public class ProductsController : ApiControllerBase
 
     public ProductsController(ISession session)
     {
-        _session = session;
+        _session = session ?? throw new ArgumentNullException(nameof(session));
     }
 
     [HttpGet]
@@ -47,18 +47,13 @@ public class ProductsController : ApiControllerBase
     [Route("{productId:guid}/category/{categoryId:guid}")]
     public async Task<IActionResult> AddProductToCategory(Guid productId, Guid categoryId)
     {
-        var product = await _session.GetAsync<Product>(productId);
-        if (product == null)
-            throw new Exception("Product not found.");
-
-        var category = await _session.GetAsync<Category>(categoryId);
-        if (category == null)
-            throw new Exception("Category not found.");
+        var product = await _session.GetAsync<Product>(productId) ?? throw new Exception("Product not found.");
+        var category = await _session.GetAsync<Category>(categoryId) ?? throw new Exception("Category not found.");
 
         var productCategoryLink = await _session
             .Query<ProductCategoryLink>()
             .SingleOrDefaultAsync(x => x.Product.Id == productId && x.Category.Id == categoryId);
-        
+
         if (productCategoryLink != null)
             throw new Exception("Product already in category.");
 
@@ -72,23 +67,18 @@ public class ProductsController : ApiControllerBase
 
         return Ok();
     }
-    
+
     [HttpDelete]
     [Route("{productId:guid}/category/{categoryId:guid}")]
     public async Task<IActionResult> RemoveProductFromCategory(Guid productId, Guid categoryId)
     {
-        var product = await _session.GetAsync<Product>(productId);
-        if (product == null)
-            throw new Exception("Product not found.");
-
-        var category = await _session.GetAsync<Category>(categoryId);
-        if (category == null)
-            throw new Exception("Category not found.");
+        var product = await _session.GetAsync<Product>(productId) ?? throw new Exception("Product not found.");
+        var category = await _session.GetAsync<Category>(categoryId) ?? throw new Exception("Category not found.");
 
         var productCategoryLink = await _session
             .Query<ProductCategoryLink>()
-            .SingleOrDefaultAsync(x => x.Product.Id == productId && x.Category.Id == categoryId);
-        
+            .SingleOrDefaultAsync(x => x.Product.Id == product.Id && x.Category.Id == category.Id);
+
         if (productCategoryLink == null)
             throw new Exception("Product not in category.");
 
@@ -138,7 +128,7 @@ public class ProductsController : ApiControllerBase
             AvailableInStores = includeAvailability
                 ? p.ProductStoreLinks.Select(avail => new ProductAvailabilityModel
                     {
-                        StoreId = avail.Store.Id, 
+                        StoreId = avail.Store.Id,
                         StoreName = avail.Store.Name,
                         AvailableCount = avail.AvailableCount
                     })
