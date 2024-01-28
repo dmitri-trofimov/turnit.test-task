@@ -14,7 +14,7 @@ changes are not required.
 
 ### Task 1
 
-Add functionality to add/remove products to categories.
+Add functionality to add/remove products to/from categories.
 
 Implement methods:
 

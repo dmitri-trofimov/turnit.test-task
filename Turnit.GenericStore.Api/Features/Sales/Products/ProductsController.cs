@@ -47,32 +47,54 @@ public class ProductsController : ApiControllerBase
     [Route("{productId:guid}/category/{categoryId:guid}")]
     public async Task<IActionResult> AddProductToCategory(Guid productId, Guid categoryId)
     {
-        var product = await _session
-            .Query<Product>()
-            .FetchMany(x => x.ProductCategoryLinks)
-            .ThenFetch(x => x.Category)
-            .SingleOrDefaultAsync(x => x.Id == productId);
-
+        var product = await _session.GetAsync<Product>(productId);
         if (product == null)
             throw new Exception("Product not found.");
 
-        var category = await _session
-            .Query<Category>()
-            .FetchMany(x => x.ProductCategoryLinks)
-            .ThenFetch(x => x.Category)
-            .SingleOrDefaultAsync(x => x.Id == categoryId);
-
+        var category = await _session.GetAsync<Category>(categoryId);
         if (category == null)
             throw new Exception("Category not found.");
 
-        if (category.ProductCategoryLinks.Any(x => x.Product == product))
+        var productCategoryLink = await _session
+            .Query<ProductCategoryLink>()
+            .SingleOrDefaultAsync(x => x.Product.Id == productId && x.Category.Id == categoryId);
+        
+        if (productCategoryLink != null)
             throw new Exception("Product already in category.");
 
         using (var transaction = _session.BeginTransaction())
         {
-            var productCategory = new ProductCategoryLink { Product = product, Category = category };
-            await _session.SaveAsync(productCategory);
+            productCategoryLink = new ProductCategoryLink { Product = product, Category = category };
+            await _session.SaveAsync(productCategoryLink);
 
+            await transaction.CommitAsync();
+        }
+
+        return Ok();
+    }
+    
+    [HttpDelete]
+    [Route("{productId:guid}/category/{categoryId:guid}")]
+    public async Task<IActionResult> RemoveProductFromCategory(Guid productId, Guid categoryId)
+    {
+        var product = await _session.GetAsync<Product>(productId);
+        if (product == null)
+            throw new Exception("Product not found.");
+
+        var category = await _session.GetAsync<Category>(categoryId);
+        if (category == null)
+            throw new Exception("Category not found.");
+
+        var productCategoryLink = await _session
+            .Query<ProductCategoryLink>()
+            .SingleOrDefaultAsync(x => x.Product.Id == productId && x.Category.Id == categoryId);
+        
+        if (productCategoryLink == null)
+            throw new Exception("Product not in category.");
+
+        using (var transaction = _session.BeginTransaction())
+        {
+            await _session.DeleteAsync(productCategoryLink);
             await transaction.CommitAsync();
         }
 
