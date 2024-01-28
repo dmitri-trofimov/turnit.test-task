@@ -12,7 +12,7 @@ Also the code performance and maintainability is not so good - code duplication 
 You are free to use any additional libraries, patterns, etc that you find fit (except replacing NHibernate). Database
 changes are not required.
 
-### Task 1
+### Task 1 (done)
 
 Add functionality to add/remove products to/from categories.
 
