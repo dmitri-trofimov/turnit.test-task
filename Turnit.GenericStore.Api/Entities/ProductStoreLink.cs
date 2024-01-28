@@ -3,7 +3,7 @@ using FluentNHibernate.Mapping;
 
 namespace Turnit.GenericStore.Api.Entities;
 
-public class ProductInStore
+public class ProductStoreLink
 {
     public virtual Guid Id { get; set; }
     public virtual Product Product { get; set; }
@@ -11,9 +11,9 @@ public class ProductInStore
     public virtual int AvailableCount { get; set; }
 }
 
-public class ProductInStoreMap : ClassMap<ProductInStore>
+public class ProductStoreLinkMap : ClassMap<ProductStoreLink>
 {
-    public ProductInStoreMap()
+    public ProductStoreLinkMap()
     {
         Schema("public");
         Table("product_availability");

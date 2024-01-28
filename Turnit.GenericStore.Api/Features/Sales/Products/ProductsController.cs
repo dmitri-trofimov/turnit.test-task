@@ -43,19 +43,59 @@ public class ProductsController : ApiControllerBase
         return result;
     }
 
+    [HttpPut]
+    [Route("{productId:guid}/category/{categoryId:guid}")]
+    public async Task<IActionResult> AddProductToCategory(Guid productId, Guid categoryId)
+    {
+        var product = await _session
+            .Query<Product>()
+            .FetchMany(x => x.ProductCategoryLinks)
+            .ThenFetch(x => x.Category)
+            .SingleOrDefaultAsync(x => x.Id == productId);
+
+        if (product == null)
+            throw new Exception("Product not found.");
+
+        var category = await _session
+            .Query<Category>()
+            .FetchMany(x => x.ProductCategoryLinks)
+            .ThenFetch(x => x.Category)
+            .SingleOrDefaultAsync(x => x.Id == categoryId);
+
+        if (category == null)
+            throw new Exception("Category not found.");
+
+        if (category.ProductCategoryLinks.Any(x => x.Product == product))
+            throw new Exception("Product already in category.");
+
+        using (var transaction = _session.BeginTransaction())
+        {
+            var productCategory = new ProductCategoryLink { Product = product, Category = category };
+            await _session.SaveAsync(productCategory);
+
+            await transaction.CommitAsync();
+        }
+
+        return Ok();
+    }
+
     private IQueryable<Product> GetProductsQuery(Guid? categoryId, bool includeAvailability,
         bool includeCategories)
     {
         var productsQuery = _session.Query<Product>();
 
         if (categoryId != null)
-            productsQuery = productsQuery.Where(p => p.Categories.Any(c => c.Id == categoryId));
+            productsQuery = productsQuery.Where(p => p.ProductCategoryLinks.Any(c => c.Id == categoryId));
 
         if (includeCategories)
-            productsQuery = productsQuery.Fetch(x => x.Categories);
+            productsQuery = productsQuery
+                .FetchMany(x => x.ProductCategoryLinks)
+                .ThenFetch(x => x.Product);
 
         if (includeAvailability)
-            productsQuery = productsQuery.Fetch(x => x.AvailableInStores);
+            productsQuery = productsQuery
+                .FetchMany(x => x.ProductStoreLinks)
+                .ThenFetch(x => x.Store);
 
         return productsQuery;
     }
@@ -69,12 +109,16 @@ public class ProductsController : ApiControllerBase
             Id = p.Id,
             Name = p.Name,
             Categories = includeCategories
-                ? p.Categories.Select(cat => new ProductCategoryModel { Id = cat.Id, Name = cat.Name }).ToArray()
+                ? p.ProductCategoryLinks
+                    .Select(cat => new ProductCategoryModel { Id = cat.Category.Id, Name = cat.Category.Name })
+                    .ToArray()
                 : null,
             AvailableInStores = includeAvailability
-                ? p.AvailableInStores.Select(avail => new ProductAvailabilityModel
+                ? p.ProductStoreLinks.Select(avail => new ProductAvailabilityModel
                     {
-                        StoreId = avail.Store.Id, StoreName = avail.Store.Name, AvailableCount = avail.AvailableCount
+                        StoreId = avail.Store.Id, 
+                        StoreName = avail.Store.Name,
+                        AvailableCount = avail.AvailableCount
                     })
                     .ToArray()
                 : null

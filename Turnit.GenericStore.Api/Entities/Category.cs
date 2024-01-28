@@ -8,13 +8,13 @@ public class Category
 {
     public Category()
     {
-        Products = new List<Product>();
+        ProductCategoryLinks = new List<ProductCategoryLink>();
     }
 
     public virtual Guid Id { get; set; }
     public virtual string Name { get; set; }
 
-    public virtual IList<Product> Products { get; set; }
+    public virtual IList<ProductCategoryLink> ProductCategoryLinks { get; set; }
 }
 
 public class CategoryMap : ClassMap<Category>
@@ -27,7 +27,7 @@ public class CategoryMap : ClassMap<Category>
         Id(x => x.Id, "id");
         Map(x => x.Name, "name");
 
-        HasManyToMany(x => x.Products)
+        HasMany(x => x.ProductCategoryLinks)
             .Table("product_category");
     }
 }

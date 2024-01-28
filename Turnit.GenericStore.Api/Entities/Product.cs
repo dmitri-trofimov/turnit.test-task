@@ -8,16 +8,16 @@ public class Product
 {
     public Product()
     {
-        AvailableInStores = new HashSet<ProductInStore>();
-        Categories = new HashSet<Category>();
+        ProductStoreLinks = new HashSet<ProductStoreLink>();
+        ProductCategoryLinks = new HashSet<ProductCategoryLink>();
     }
 
     public virtual Guid Id { get; set; }
     public virtual string Name { get; set; }
     public virtual string Description { get; set; }
 
-    public virtual ISet<Category> Categories { get; set; }
-    public virtual ISet<ProductInStore> AvailableInStores { get; set; }
+    public virtual ISet<ProductCategoryLink> ProductCategoryLinks { get; set; }
+    public virtual ISet<ProductStoreLink> ProductStoreLinks { get; set; }
 }
 
 public class ProductMap : ClassMap<Product>
@@ -31,11 +31,10 @@ public class ProductMap : ClassMap<Product>
         Map(x => x.Name, "name");
         Map(x => x.Description, "description");
 
-        HasManyToMany(x => x.Categories)
-            .Table("product_category")
+        HasMany(x => x.ProductCategoryLinks)
             .AsSet();
 
-        HasMany(x => x.AvailableInStores)
+        HasMany(x => x.ProductStoreLinks)
             .AsSet();
     }
 }

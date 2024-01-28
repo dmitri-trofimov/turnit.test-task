@@ -9,7 +9,7 @@ public class Store
     public virtual Guid Id { get; set; }
     public virtual string Name { get; set; }
 
-    public virtual IList<ProductInStore> Products { get; set; }
+    public virtual IList<ProductStoreLink> ProductStoreLinks { get; set; }
 }
 
 public class StoreMap : ClassMap<Store>
@@ -22,6 +22,6 @@ public class StoreMap : ClassMap<Store>
         Id(x => x.Id, "id");
         Map(x => x.Name, "name");
 
-        HasMany(x => x.Products);
+        HasMany(x => x.ProductStoreLinks);
     }
 }

@@ -16,8 +16,10 @@ changes are not required.
 
 Add functionality to add/remove products to categories.
 
-Implement methods `PUT /products/{productId}/category/{categoryId}`
-and `DELETE /products/{productId}/category/{categoryId}`
+Implement methods:
+
+* `PUT /products/{productId}/category/{categoryId}`
+* `DELETE /products/{productId}/category/{categoryId}`
 
 ### Task 2
 
