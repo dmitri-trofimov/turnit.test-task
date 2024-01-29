@@ -9,32 +9,27 @@ Also the code performance and maintainability is not so good - code duplication 
 
 ## Assignments
 
-You are free to use any additional libraries, patterns, etc that you find fit (except replacing NHibernate). Database
-changes are not required.
+You are free to use any additional libraries, patterns, etc that you find fit (except replacing NHibernate). Database changes are not required.
 
-### Task 1 (done)
+### Task 1
 
-Add functionality to add/remove products to/from categories.
+Add functionality to add/remove products to categories.
 
-Implement methods:
+Implement methods: -
 
-* `PUT /products/{productId}/category/{categoryId}`
-* `DELETE /products/{productId}/category/{categoryId}`
+ - [x] `PUT /products/{productId}/category/{categoryId}`
+ - [x] `DELETE /products/{productId}/category/{categoryId}`
 
-### Task 2 (done)
+### Task 2
 
 Add functionality to change products availability in different stores.
 
-Implement methods:
+Implement methods: -
 
-* `POST /stores/{storeId}/products/{productId}/purchase`
-* `POST /stores/{storeId}/products/{productId}/restock`
+ - [ ] `POST /products/{productId}/book`
+ - [ ] `POST /store/{storeId}/restock`
 
-**NB!** I took the liberty to change the the above methods to accept both
-`storeId` and `productId` for both. Previous task version didn't make any
-sense.
+### Task 3
 
-### Task 3 (done)
-
-Find and fix the memory leak issue.
-Improve the overall code quality in `GET /products/*` methods.
+ - [x] Find and fix the memory leak issue.
+ - [x] Improve the overall code quality in `GET /products/*` methods.
