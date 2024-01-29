@@ -55,7 +55,7 @@ public class ProductsController : ApiControllerBase
             .SingleOrDefaultAsync(x => x.Product.Id == productId && x.Category.Id == categoryId);
 
         if (productCategoryLink != null)
-            throw new Exception("Product already in category.");
+            return Ok();
 
         using (var transaction = _session.BeginTransaction())
         {
@@ -80,7 +80,7 @@ public class ProductsController : ApiControllerBase
             .SingleOrDefaultAsync(x => x.Product.Id == product.Id && x.Category.Id == category.Id);
 
         if (productCategoryLink == null)
-            throw new Exception("Product not in category.");
+            return Ok();
 
         using (var transaction = _session.BeginTransaction())
         {
