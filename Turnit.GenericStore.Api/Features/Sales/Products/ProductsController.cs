@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -89,6 +90,73 @@ public class ProductsController : ApiControllerBase
         }
 
         return Ok();
+    }
+
+    [HttpPost]
+    [Route("{productId:guid}/book")]
+    public async Task<IActionResult> BookProductInStores(
+        Guid productId,
+        [FromBody] StoreQuantityModel[] storeQuantities)
+    {
+        var product = await _session.GetAsync<Product>(productId) ?? throw new Exception("Product not found.");
+        var results = new List<BookProductInStoreResult>();
+        
+        using (var transaction = _session.BeginTransaction())
+        {
+            foreach (var storeQuantity in storeQuantities)
+            {
+                var storeResult = await BookProductInStore(product.Id, storeQuantity.StoreId, storeQuantity.Quantity);
+                results.Add(storeResult);
+            }
+            
+            await transaction.CommitAsync();
+        }
+        
+        return Ok(results);
+    }
+
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
+    private class BookProductInStoreResult
+    {
+        public Guid StoreId { get; init; }
+        public bool IsSuccess { get; init; }
+        public string Message { get; init; }
+    }
+
+    private async Task<BookProductInStoreResult> BookProductInStore(Guid productId, Guid storeId, int quantity)
+    {
+        try
+        {
+            var store = await _session.GetAsync<Store>(storeId) ?? throw new Exception("Store not found.");
+
+            var productStoreLink = await _session
+                .Query<ProductStoreLink>()
+                .SingleOrDefaultAsync(x => x.Product.Id == productId && x.Store.Id == store.Id);
+
+            if (productStoreLink == null)
+                throw new Exception("Product is not presented in store.");
+        
+            if (productStoreLink.AvailableCount < quantity)
+                throw new Exception("Insufficient product quantity in store.");
+                
+            productStoreLink.AvailableCount -= quantity;
+            await _session.SaveOrUpdateAsync(productStoreLink);
+
+            return new BookProductInStoreResult
+            {
+                StoreId = storeId,
+                IsSuccess = true
+            };
+        }
+        catch (Exception ex)
+        {
+            return new BookProductInStoreResult
+            {
+                StoreId = storeId,
+                IsSuccess = false,
+                Message = ex.Message
+            };
+        }
     }
 
     private IQueryable<Product> GetProductsQuery(Guid? categoryId, bool includeAvailability,

@@ -61,7 +61,7 @@ public class Startup
     {
         if (env.IsDevelopment())
             app.UseDeveloperExceptionPage();
-        
+
         app.UseMiddleware<ExceptionHandlingMiddleware>();
         app.UseRouting();
 
