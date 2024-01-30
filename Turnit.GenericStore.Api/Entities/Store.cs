@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using FluentNHibernate.Mapping;
 
 namespace Turnit.GenericStore.Api.Entities;
@@ -6,8 +7,9 @@ namespace Turnit.GenericStore.Api.Entities;
 public class Store
 {
     public virtual Guid Id { get; set; }
-
     public virtual string Name { get; set; }
+
+    public virtual IList<ProductStoreLink> ProductStoreLinks { get; set; }
 }
 
 public class StoreMap : ClassMap<Store>
@@ -15,9 +17,11 @@ public class StoreMap : ClassMap<Store>
     public StoreMap()
     {
         Schema("public");
-        Table("product");
+        Table("store");
 
         Id(x => x.Id, "id");
         Map(x => x.Name, "name");
+
+        HasMany(x => x.ProductStoreLinks);
     }
 }
