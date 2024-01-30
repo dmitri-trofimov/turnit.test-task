@@ -47,7 +47,7 @@ public class StoresController : ApiControllerBase
             {
                 var storeResult =
                     await RestockProductInStore(productQuantity.ProductId, store.Id, productQuantity.Quantity);
-                
+
                 results.Add(storeResult);
             }
 
