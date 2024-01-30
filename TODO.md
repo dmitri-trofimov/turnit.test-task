@@ -28,7 +28,7 @@ Add functionality to change products availability in different stores.
 Implement methods: -
 
 - [x] `POST /products/{productId}/book`
-- [ ] `POST /store/{storeId}/restock`
+- [x] `POST /stores/{storeId}/restock`
 
 ### Task 3
 

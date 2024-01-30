@@ -115,7 +115,7 @@ Response:
 ]
 ```
 
-### POST /store/{storeId}/restock
+### POST /stores/{storeId}/restock
 
 Adds specified quantity of products to the stores availability.
 This is used to increase the availability of products in specific store.

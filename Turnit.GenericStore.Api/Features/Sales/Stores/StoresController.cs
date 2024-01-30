@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NHibernate;
@@ -17,33 +20,84 @@ public class StoresController : ApiControllerBase
         _session = session ?? throw new ArgumentNullException(nameof(session));
     }
 
-    [HttpPost]
-    [Route("{storeId:guid}/products/{productId:guid}/restock")]
-    public async Task<IActionResult> RestockProductInStore(
-        Guid storeId,
-        Guid productId,
-        [FromBody] ProductRestockModel model)
+    [HttpGet]
+    [Route("")]
+    public async Task<IActionResult> GetAllStores()
     {
-        if (model.Quantity < 1)
-            throw new Exception("Restock quantity must be greater than zero.");
+        var stores = await _session
+            .Query<Store>()
+            .Select(x => new StoreModel { Id = x.Id, Name = x.Name })
+            .ToListAsync();
 
-        var store = _session.Get<Store>(storeId) ?? throw new Exception("Store not found.");
-        var product = _session.Get<Product>(productId) ?? throw new Exception("Product not found.");
+        return Ok(stores);
+    }
 
-        var productStoreLink = await _session.Query<ProductStoreLink>()
-            .SingleOrDefaultAsync(x => x.Store.Id == store.Id && x.Product.Id == product.Id);
-
-        if (productStoreLink == null)
-            throw new Exception("Product is not presented in store.");
+    [HttpPost]
+    [Route("{storeId:guid}/restock")]
+    public async Task<IActionResult> RestockProductsInStore(
+        Guid storeId,
+        [FromBody] ProductQuantityModel[] productQuantities)
+    {
+        var store = await _session.GetAsync<Store>(storeId) ?? throw new Exception("Store not found.");
+        var results = new List<RestockProductInStoreResult>();
 
         using (var transaction = _session.BeginTransaction())
         {
-            productStoreLink.AvailableCount += model.Quantity;
-            await _session.SaveOrUpdateAsync(productStoreLink);
+            foreach (var productQuantity in productQuantities)
+            {
+                var storeResult =
+                    await RestockProductInStore(productQuantity.ProductId, store.Id, productQuantity.Quantity);
+                
+                results.Add(storeResult);
+            }
 
             await transaction.CommitAsync();
         }
 
-        return Ok();
+        return Ok(results);
+    }
+
+    private async Task<RestockProductInStoreResult> RestockProductInStore(Guid productId, Guid storeId, int quantity)
+    {
+        try
+        {
+            if (quantity < 1)
+                throw new Exception("Quantity must be greater than zero.");
+
+            var product = await _session.GetAsync<Product>(productId) ?? throw new Exception("Product not found.");
+
+            var productStoreLink = await _session
+                .Query<ProductStoreLink>()
+                .SingleOrDefaultAsync(x => x.Product.Id == product.Id && x.Store.Id == storeId);
+
+            if (productStoreLink == null)
+                throw new Exception("Product is not presented in store.");
+
+            productStoreLink.AvailableCount += quantity;
+            await _session.SaveOrUpdateAsync(productStoreLink);
+
+            return new RestockProductInStoreResult
+            {
+                ProductId = productId,
+                IsSuccess = true
+            };
+        }
+        catch (Exception ex)
+        {
+            return new RestockProductInStoreResult
+            {
+                ProductId = productId,
+                IsSuccess = false,
+                Message = ex.Message
+            };
+        }
+    }
+
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
+    private class RestockProductInStoreResult
+    {
+        public Guid ProductId { get; init; }
+        public bool IsSuccess { get; init; }
+        public string Message { get; init; }
     }
 }

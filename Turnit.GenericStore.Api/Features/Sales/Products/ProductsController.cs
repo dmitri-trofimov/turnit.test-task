@@ -100,7 +100,7 @@ public class ProductsController : ApiControllerBase
     {
         var product = await _session.GetAsync<Product>(productId) ?? throw new Exception("Product not found.");
         var results = new List<BookProductInStoreResult>();
-        
+
         using (var transaction = _session.BeginTransaction())
         {
             foreach (var storeQuantity in storeQuantities)
@@ -108,25 +108,20 @@ public class ProductsController : ApiControllerBase
                 var storeResult = await BookProductInStore(product.Id, storeQuantity.StoreId, storeQuantity.Quantity);
                 results.Add(storeResult);
             }
-            
+
             await transaction.CommitAsync();
         }
-        
-        return Ok(results);
-    }
 
-    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
-    private class BookProductInStoreResult
-    {
-        public Guid StoreId { get; init; }
-        public bool IsSuccess { get; init; }
-        public string Message { get; init; }
+        return Ok(results);
     }
 
     private async Task<BookProductInStoreResult> BookProductInStore(Guid productId, Guid storeId, int quantity)
     {
         try
         {
+            if (quantity < 1)
+                throw new Exception("Quantity must be greater than zero.");
+
             var store = await _session.GetAsync<Store>(storeId) ?? throw new Exception("Store not found.");
 
             var productStoreLink = await _session
@@ -135,10 +130,10 @@ public class ProductsController : ApiControllerBase
 
             if (productStoreLink == null)
                 throw new Exception("Product is not presented in store.");
-        
+
             if (productStoreLink.AvailableCount < quantity)
                 throw new Exception("Insufficient product quantity in store.");
-                
+
             productStoreLink.AvailableCount -= quantity;
             await _session.SaveOrUpdateAsync(productStoreLink);
 
@@ -205,5 +200,13 @@ public class ProductsController : ApiControllerBase
         }).ToArray();
 
         return result;
+    }
+
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
+    private class BookProductInStoreResult
+    {
+        public Guid StoreId { get; init; }
+        public bool IsSuccess { get; init; }
+        public string Message { get; init; }
     }
 }
